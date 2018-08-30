@@ -8,13 +8,25 @@ import xadrez.peca.Torre;
 
 public class PartidaXadrez {
 	
+	private int turno;
+	private Cor jogadorAtual;
 	private Tabuleiro tabuleiro;
 	
 	public PartidaXadrez() {
 		tabuleiro = new Tabuleiro(8, 8);
+		turno = 1;
+		jogadorAtual = Cor.BRANCO;
 		inicioSetup();
 	}
 
+	public int getTurno() {
+		return turno;
+	}
+	
+	public Cor getJogadorAtual() {
+		return jogadorAtual;
+	}
+		
 	public PecaXadrez[][] getPecas(){
 		PecaXadrez[][] mat = new PecaXadrez[tabuleiro.getLinhas()][tabuleiro.getColunas()];
 		for(int i=0; i<tabuleiro.getLinhas(); i++) {
@@ -25,12 +37,19 @@ public class PartidaXadrez {
 		return mat;
 	}
 	
+	public boolean[][] movimentosPossiveis(XadrezPosicao origemPosicao){
+		Posicao posicao = origemPosicao.toPosicao();
+		validarPosicaoOrigem(posicao);
+		return tabuleiro.peca(posicao).movimentosPossiveis();
+	}
+	
 	public PecaXadrez perfomanceMovimento(XadrezPosicao posicaoOrigem, XadrezPosicao posicaoDestino) {
 		Posicao origem = posicaoOrigem.toPosicao();
 		Posicao destino = posicaoDestino.toPosicao();
 		validarPosicaoOrigem(origem);
 		validarPosicaoDestino(origem, destino);
 		Peca capturarPeca = realizarMovimento(origem, destino);
+		proximoTurno();
 		return (PecaXadrez) capturarPeca;
 	}
 	
@@ -45,6 +64,9 @@ public class PartidaXadrez {
 		if(!tabuleiro.temPeca(posicao)){
 			throw new XadrezExcepition("Nao existe peca na posicao de origem!");
 		}
+		if(jogadorAtual != ((PecaXadrez)tabuleiro.peca(posicao)).getCor()) {
+			throw new XadrezExcepition("Essa peca nao e sua!");
+		}
 		if (!tabuleiro.peca(posicao).existeAlgumMovimentoPossivel()) {
 			throw new XadrezExcepition("Nao existe movimento possivel para a peca selecionada");
 		}
@@ -54,6 +76,11 @@ public class PartidaXadrez {
 		if (!tabuleiro.peca(origem).movivemtosPossiveis(destino)) {
 			throw new XadrezExcepition("Nao e possivel realizar o movimento para a posicao de destino");
 		}
+	}
+	
+	private void proximoTurno() {
+		turno++;
+		jogadorAtual = (jogadorAtual == Cor.BRANCO) ? Cor.PRETO : Cor.BRANCO;
 	}
 	
 	private void colocarNovaPeca(char coluna, int linha, PecaXadrez peca) {
