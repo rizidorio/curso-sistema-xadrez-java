@@ -39,7 +39,7 @@ public class Tabuleiro {
 	
 	public void colocaPeca(Peca peca, Posicao posicao) {
 		if (temPeca(posicao)) {
-			throw new TabuleiroException("Existe uma peça nessa posicao " + posicao);
+			throw new TabuleiroException("Existe uma peca nessa posicao " + posicao);
 		}
 		pecas[posicao.getLinha()][posicao.getColuna()] = peca;
 		peca.posicao = posicao;
