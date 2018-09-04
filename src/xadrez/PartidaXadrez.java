@@ -1,5 +1,6 @@
 package xadrez;
 
+import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,6 +23,7 @@ public class PartidaXadrez {
 	private boolean xeque;
 	private boolean xequeMate;
 	private PecaXadrez enPassantVuneravel;
+	private PecaXadrez promocao;
 	
 	private List<Peca> pecasNoTabuleiro = new ArrayList<>();
 	private List<Peca> pecasCapturadas = new ArrayList<>();
@@ -51,6 +53,10 @@ public class PartidaXadrez {
 	
 	public PecaXadrez getEnPanssantVuneralvel() {
 		return enPassantVuneravel;
+	}
+	
+	public PecaXadrez getPromocao() {
+		return promocao;
 	}
 	
 	public PecaXadrez[][] getPecas(){
@@ -83,6 +89,16 @@ public class PartidaXadrez {
 		
 		PecaXadrez pecaMovida = (PecaXadrez)tabuleiro.peca(destino);
 		
+		// #movimentoespecial promocao
+		promocao = null;
+		if (pecaMovida instanceof Peao) {
+			if((pecaMovida.getCor() == Cor.BRANCO && destino.getLinha() == 0)|| (pecaMovida.getCor() == Cor.PRETO && destino.getLinha() == 7)) {
+				promocao = (PecaXadrez)tabuleiro.peca(destino);
+				promocao = trocarPecaPromovida("Q");
+			}
+			
+		}
+		
 		xeque = (testeXeque(oponente(jogadorAtual))) ? true : false;
 		
 		if (testeXequeMate(oponente(jogadorAtual))) {
@@ -101,6 +117,32 @@ public class PartidaXadrez {
 		}
 		
 		return (PecaXadrez) pecaCapturada;
+	}
+	
+	public PecaXadrez trocarPecaPromovida(String tipo) {
+		if (promocao == null) {
+			throw new IllegalStateException("Essa peca nao pode ser promovida");
+		}
+		if (!tipo.equals("B") && !tipo.equals("C") && !tipo.equals("T") && !tipo.equals("Q")) {
+			throw new InvalidParameterException("Tipo invalido para promocao");
+		}
+		
+		Posicao pos = promocao.getXadrezPosicao().toPosicao();
+		Peca p = tabuleiro.removerPeca(pos);
+		pecasNoTabuleiro.remove(p);
+		
+		PecaXadrez novaPeca = novaPeca(tipo, promocao.getCor());
+		tabuleiro.colocaPeca(novaPeca, pos);
+		pecasNoTabuleiro.add(novaPeca);
+		
+		return novaPeca;
+	}
+	
+	private PecaXadrez novaPeca (String tipo, Cor cor) {
+		if (tipo.equals("B")) return new Bispo(tabuleiro, cor);
+		if (tipo.equals("C")) return new Cavalo(tabuleiro, cor);
+		if (tipo.equals("Q")) return new Rainha(tabuleiro, cor);
+		return new Torre(tabuleiro, cor);
 	}
 	
 	private Peca realizarMovimento(Posicao origem, Posicao destino) {
